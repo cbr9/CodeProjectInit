@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/rjeczalik/notify"
 	"io/ioutil"
@@ -9,14 +10,20 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 )
 
 const configFile = "./config.json"
 
 func main() {
+	if runtime.GOOS == "windows" {
+		log.Fatal(errors.New("can't run on windows"))
+		return
+	}
 	watcher := newWatcher()
 	watcher.watch()
+
 }
 
 type watcher struct {
