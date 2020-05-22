@@ -15,8 +15,8 @@ import (
 const configFile = "./config.json"
 
 func main() {
-	watcher := NewCodeWatcher()
-	watcher.Watch()
+	watcher := newWatcher()
+	watcher.watch()
 }
 
 type watcher struct {
@@ -30,7 +30,7 @@ type folderConfig struct {
 	ExcludedDirs []string `json:"excluded_dirs"`
 }
 
-func NewCodeWatcher() *watcher {
+func newWatcher() *watcher {
 	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		log.Fatal(err)
@@ -53,7 +53,7 @@ func NewCodeWatcher() *watcher {
 // From the official documentation:
 // "Running git init in an existing repository is safe. It will not overwrite things that are already there".
 // This means we don't need to check if it already exists
-func (w *watcher) Init(newFolder string, command string) {
+func (w *watcher) runInitCmd(newFolder string, command string) {
 	err := os.Chdir(newFolder)
 	if err != nil {
 		log.Println(err)
@@ -71,11 +71,11 @@ func (w *watcher) Init(newFolder string, command string) {
 	}
 }
 
-func IsUnixHiddenDir(name string) bool {
+func isUnixHiddenDir(name string) bool {
 	return strings.HasPrefix(name, ".")
 }
 
-func Contains(slice []string, elements ...string) bool {
+func contains(slice []string, elements ...string) bool {
 	for i := range slice {
 		for _, elem := range elements {
 			if slice[i] == elem {
@@ -86,7 +86,7 @@ func Contains(slice []string, elements ...string) bool {
 	return false
 }
 
-func (w *watcher) Watch() {
+func (w *watcher) watch() {
 	_ = os.Chdir(w.code)
 	c := make(chan notify.EventInfo, 1)
 	err := notify.Watch("./...", c, notify.Create)
@@ -107,19 +107,19 @@ func (w *watcher) Watch() {
 			if fi.IsDir() {
 				pathChunks := strings.Split(strings.TrimPrefix(change.Path(), w.code+"/"), "/")
 				topParent := pathChunks[0]
-				if len(pathChunks) == w.config[topParent].Depth && !Contains(pathChunks, w.config[topParent].ExcludedDirs...) && !IsUnixHiddenDir(path.Base(change.Path())) {
+				if len(pathChunks) == w.config[topParent].Depth && !contains(pathChunks, w.config[topParent].ExcludedDirs...) && !isUnixHiddenDir(path.Base(change.Path())) {
 					// avoid hidden folders
 					switch topParent {
 					case "Go":
-						w.Init(change.Path(), "go mod init")
-						w.Init(change.Path(), "git init")
+						w.runInitCmd(change.Path(), "go mod init")
+						w.runInitCmd(change.Path(), "git init")
 						break
 					case "Rust":
-						w.Init(change.Path(), "cargo init")
-						w.Init(change.Path(), "git init")
+						w.runInitCmd(change.Path(), "cargo init")
+						w.runInitCmd(change.Path(), "git init")
 						break
 					default:
-						w.Init(change.Path(), "git init")
+						w.runInitCmd(change.Path(), "git init")
 					}
 				}
 			}
