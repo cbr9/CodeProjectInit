@@ -1,0 +1,25 @@
+{
+  "Bash": {
+    "depth": 2,
+    "excluded_dirs": []
+  },
+  "Python": {
+    "depth": 3,
+    "excluded_dirs": []
+  },
+  "Go": {
+    "depth": 3,
+    "excluded_dirs": [
+      "github.com",
+      "golang.org"
+    ]
+  },
+  "Rust": {
+    "depth": 2,
+    "excluded_dirs": []
+  },
+  "Web Development": {
+    "depth": 2,
+    "excluded_dirs": []
+  }
+}
