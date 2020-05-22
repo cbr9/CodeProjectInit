@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rjeczalik/notify"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,13 +11,15 @@ import (
 	"path"
 	"runtime"
 	"strings"
+
+	"github.com/rjeczalik/notify"
 )
 
 const configFile = "./config.json"
 
 func main() {
 	if runtime.GOOS == "windows" {
-		log.Fatal(errors.New("can't run on windows"))
+		log.Fatal(errors.New("windows is not supported"))
 		return
 	}
 	watcher := newWatcher()
@@ -123,7 +124,6 @@ func (w *watcher) watch() {
 						break
 					case "Rust":
 						w.runInitCmd(change.Path(), "cargo init")
-						w.runInitCmd(change.Path(), "git init")
 						break
 					default:
 						w.runInitCmd(change.Path(), "git init")
