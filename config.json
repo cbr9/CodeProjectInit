@@ -1,25 +1,26 @@
 {
-  "Bash": {
-    "depth": 2,
-    "excluded_dirs": []
-  },
-  "Python": {
-    "depth": 3,
-    "excluded_dirs": []
-  },
-  "Go": {
-    "depth": 3,
-    "excluded_dirs": [
-      "github.com",
-      "golang.org"
-    ]
-  },
-  "Rust": {
-    "depth": 2,
-    "excluded_dirs": []
-  },
-  "Web Development": {
-    "depth": 2,
-    "excluded_dirs": []
+  "projects_dir": "/home/cabero/Code/",
+  "languages": {
+    "Bash": {
+      "depth": 2
+    },
+    "Python": {
+      "depth": 3
+    },
+    "Go": {
+      "depth": 3,
+      "excluded_dirs": [
+        "github.com",
+        "golang.org"
+      ],
+      "extra_cmd": "go mod init"
+    },
+    "Rust": {
+      "depth": 2,
+      "extra_cmd": "cargo init"
+    },
+    "Web Development": {
+      "depth": 2
+    }
   }
 }
