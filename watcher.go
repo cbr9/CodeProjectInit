@@ -2,14 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"path"
-	"runtime"
 	"strings"
 
 	"github.com/rjeczalik/notify"
@@ -18,50 +15,45 @@ import (
 const configFile = "./config.json"
 
 func main() {
-	if runtime.GOOS == "windows" {
-		log.Fatal(errors.New("windows is not supported"))
-		return
-	}
 	watcher := newWatcher()
 	watcher.watch()
-
 }
 
 type watcher struct {
-	home   string
-	code   string
-	config map[string]folderConfig
+	config config
 }
 
-type folderConfig struct {
+type config struct {
+	ProjectsDir string              `json:"projects_dir"`
+	Languages   map[string]language `json:"languages"`
+}
+
+type language struct {
 	Depth        int      `json:"depth"`
 	ExcludedDirs []string `json:"excluded_dirs"`
+	ExtraCmd     string   `json:"extra_cmd"`
 }
 
-func newWatcher() *watcher {
+func getConfig() *config {
 	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		log.Fatal(err)
 		return nil
 	}
-	var config map[string]folderConfig
+	var config config
 	err = json.Unmarshal(data, &config)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	home := os.Getenv("HOME")
-	return &watcher{
-		home:   home,
-		code:   path.Join(home, "Code"),
-		config: config,
-	}
+	return &config
 }
 
-// From the official documentation:
-// "Running git init in an existing repository is safe. It will not overwrite things that are already there".
-// This means we don't need to check if it already exists
-func (w *watcher) runInitCmd(newFolder string, command string) {
+func newWatcher() *watcher {
+	config := getConfig()
+	return &watcher{*config}
+}
+
+func (w *watcher) runCmd(newFolder string, command string) {
 	err := os.Chdir(newFolder)
 	if err != nil {
 		log.Println(err)
@@ -76,6 +68,20 @@ func (w *watcher) runInitCmd(newFolder string, command string) {
 	err = cmd.Run()
 	if err != nil {
 		log.Println(err)
+	}
+}
+func (w *watcher) run(fi os.FileInfo, path string) {
+	if fi.IsDir() {
+		pathChunks := strings.Split(strings.TrimPrefix(path, w.config.ProjectsDir), string(os.PathSeparator))
+		language := w.config.Languages[pathChunks[0]]
+		if len(pathChunks) == language.Depth && !isUnixHiddenDir(path) { // avoid hidden folders in Unix systems
+			if (len(language.ExcludedDirs) > 0 && !contains(pathChunks, language.ExcludedDirs...)) || len(language.ExcludedDirs) == 0 {
+				if language.ExtraCmd != "" {
+					w.runCmd(path, language.ExtraCmd)
+				}
+				w.runCmd(path, "git init")
+			}
+		}
 	}
 }
 
@@ -95,7 +101,7 @@ func contains(slice []string, elements ...string) bool {
 }
 
 func (w *watcher) watch() {
-	_ = os.Chdir(w.code)
+	_ = os.Chdir(w.config.ProjectsDir)
 	c := make(chan notify.EventInfo, 1)
 	err := notify.Watch("./...", c, notify.Create)
 	if err != nil {
@@ -112,24 +118,7 @@ func (w *watcher) watch() {
 				log.Println(err)
 				continue
 			}
-			if fi.IsDir() {
-				pathChunks := strings.Split(strings.TrimPrefix(change.Path(), w.code+"/"), "/")
-				topParent := pathChunks[0]
-				if len(pathChunks) == w.config[topParent].Depth && !contains(pathChunks, w.config[topParent].ExcludedDirs...) && !isUnixHiddenDir(path.Base(change.Path())) {
-					// avoid hidden folders
-					switch topParent {
-					case "Go":
-						w.runInitCmd(change.Path(), "go mod init")
-						w.runInitCmd(change.Path(), "git init")
-						break
-					case "Rust":
-						w.runInitCmd(change.Path(), "cargo init")
-						break
-					default:
-						w.runInitCmd(change.Path(), "git init")
-					}
-				}
-			}
+			w.run(fi, change.Path())
 		}
 	}
 }
