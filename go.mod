@@ -1,4 +1,4 @@
-module GitInitMe
+module CodeProjectInit
 
 go 1.14
 

@@ -75,7 +75,7 @@ func (w *watcher) run(fi os.FileInfo, path string) {
 		pathChunks := strings.Split(strings.TrimPrefix(path, w.config.ProjectsDir), string(os.PathSeparator))
 		language := w.config.Languages[pathChunks[0]]
 		if len(pathChunks) == language.Depth && !isUnixHiddenDir(path) { // avoid hidden folders in Unix systems
-			if (len(language.ExcludedDirs) > 0 && !contains(pathChunks, language.ExcludedDirs...)) || len(language.ExcludedDirs) == 0 {
+			if (len(language.ExcludedDirs) > 0 && !contains(pathChunks[1:len(pathChunks)-1], language.ExcludedDirs...)) || len(language.ExcludedDirs) == 0 {
 				if language.ExtraCmd != "" {
 					w.runCmd(path, language.ExtraCmd)
 				}

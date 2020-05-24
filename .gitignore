@@ -7,6 +7,7 @@ go.sum
 *.dll
 *.so
 *.dylib
+CodeProjectInit
 
 # Test binary, built with `go test -c`
 *.test
@@ -25,4 +26,3 @@ go.sum
 *.iml
 out
 gen
-CodeProjectInit
