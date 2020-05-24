@@ -2,8 +2,13 @@
 If you're like me, you always forget to run "git init" whenever you create a project you deem as not important. But then it grows, or it turns up to be more important than you thought, and you wish you could run "git reset" because you fucked up.
 
 This a project setup tool. Every time you create a folder in your projects folder, it will run "git init" and other related tools (like "go mod init" for Go or "cargo init" for Rust)
-It can be customized via a config JSON file. Note that this assumes that your projects folder is structured by languages, and they're not all mixed together.
-
+It can be customized via a config JSON file. Note that this assumes that your projects folder is structured by languages, and they're not all mixed together, as in
+* /home/x/Code
+   - Python
+      * ...
+   - Rust
+      * ...
+   - ...      
 ### Configuration instructions:
 #### projects_dir
 The absolute path to your projects root folder. E.g. /home/X/Code/
